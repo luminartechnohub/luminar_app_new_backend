@@ -8,8 +8,6 @@ from .manager import UserManager
 
 class User(AbstractBaseUser):
     full_name=models.CharField(max_length=60,blank=False,null=False)
-    course_name=models.CharField(max_length=100,blank=False,null=False)
-    parent_no=models.CharField(max_length=13,blank=False,null=False)
     phone=models.CharField(max_length=13,blank=False,null=False,unique=True)
     dob=models.CharField(max_length=20,blank=False,null=False)
     email=models.EmailField(max_length=200,null=True,blank=True)
@@ -24,7 +22,7 @@ class User(AbstractBaseUser):
         ('faculty', 'Faculty'),
         ('student','Student')
     )
-    user_type = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    user_type = models.CharField(max_length=20,default='student', choices=ROLE_CHOICES)
 
     USERNAME_FIELD = 'phone'
     REQUIRED_FIELDS = []
@@ -41,3 +39,21 @@ class User(AbstractBaseUser):
         return self.is_staff
 
 
+class Student(models.Model):
+    user = models.OneToOneField(User, on_delete = models.CASCADE)
+    parent_no=models.CharField(max_length=13,blank=False,null=False)
+
+    def __str__(self):
+       return self.user.full_name
+
+class Faculty(models.Model):
+    user = models.OneToOneField(User, on_delete = models.CASCADE)   
+
+
+
+class Admin(models.Model):
+    user = models.OneToOneField(User, on_delete = models.CASCADE)     
+
+
+class SuperAdmin(models.Model):
+    user = models.OneToOneField(User, on_delete = models.CASCADE) 

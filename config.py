@@ -2,7 +2,9 @@ import os
 from configparser import ConfigParser
 
 APP = 'app'
-SECRET = 'secret'
+SID = 'sid'
+TWILIO_TOKEN='twilio_token'
+ACTIVE_NUMBER = 'active_number'
 
 class Config:
     _instance = None
@@ -27,8 +29,14 @@ class Config:
         return value
 
     @property
-    def app_secret(self):
-        return self.get_property(APP, SECRET)
+    def app_sid(self):
+        return self.get_property(APP, SID)
+    @property
+    def app_twilio(self):
+        return self.get_property(APP, TWILIO_TOKEN)
+    @property
+    def app_active_number(self):
+        return self.get_property(APP, ACTIVE_NUMBER )
 
 if __name__ == '__main__':
     config = Config.get_instance()

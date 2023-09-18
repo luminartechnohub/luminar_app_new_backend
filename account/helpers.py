@@ -1,13 +1,18 @@
-import requests
-import random
 from django.conf import settings
+from twilio.rest import Client
 
+class MessageHandler:
+    phone_number= None
+    otp = None
+    def __init__(self,phone_number,otp) -> None:
+        self.phone_number=phone_number
+        self.otp = otp
+    def send_otp_on_phone(self):
+        client = Client(settings.SID,settings.TWILIO_TOKEN) 
+        message = client.messages.create(
+            body=f'Your otp is {self.otp}',
+            from_= settings.ACTIVE_NUMBER,
+            to=f'+91{self.phone_number}'
 
-def send_otp_phone(phone):
-    try:
-        otp = random.randint(1000,9999)
-        url= f'https://2factor.in/API/V1/{settings.API_KEY}/SMS/{phone}/{otp}'
-        response = requests.get(url)
-        return otp
-    except Exception as e:
-        return None    
+        )
+        print(message.sid)

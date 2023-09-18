@@ -47,7 +47,9 @@ INSTALLED_APPS = [
 ]
 
 config = Config.get_instance()
-API_KEY = config.app_secret
+SID = config.app_sid
+TWILIO_TOKEN = config.app_twilio
+ACTIVE_NUMBER = config.app_active_number
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
