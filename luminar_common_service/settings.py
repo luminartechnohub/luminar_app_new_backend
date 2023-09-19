@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'account',
     'rest_framework_simplejwt',
     'drf_yasg',
+    'course'
 ]
 
 config = Config.get_instance()
