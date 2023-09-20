@@ -139,7 +139,8 @@ def verify_otp(request):
                     'email': user_obj.email,
                     'gender': user_obj.gender,
                     'phone_verified': user_obj.phone_verified,
-                    'user_type':user_obj.user_type
+                    'user_type':user_obj.user_type,
+                    'is_active':user_obj.is_active
                 }
             }
         }
@@ -196,7 +197,8 @@ class UserLoginView(APIView):
                         'email': user.email,
                         'gender': user.gender,
                         'phone_verified': user.phone_verified,
-                        'user_type': user.user_type
+                        'user_type': user.user_type,
+                        'is_active':user.is_active
                     }
                 }
             }
