@@ -1,4 +1,5 @@
 from rest_framework import permissions
+from .models import Student
 
 
 class SuperadminPermission(permissions.BasePermission):
@@ -26,7 +27,23 @@ class FacultyPermission(permissions.BasePermission):
     
 class StudentPermission(permissions.BasePermission):
     def has_permission(self, request, view):
-        return request.user.is_authenticated and request.user.user_type in ['superadmin', 'admin', 'faculty' , 'student']
+        return (
+            request.user.is_authenticated and
+            request.user.user_type in ['superadmin', 'admin', 'faculty', 'student'] and
+            self.is_student_active(request.user)
+        )
 
     def has_object_permission(self, request, view, obj):
-        return request.user.is_authenticated and request.user.user_type in ['superadmin', 'admin', 'faculty' ,'student']    
+        return (
+            request.user.is_authenticated and
+            request.user.user_type in ['superadmin', 'admin', 'faculty', 'student'] and
+            self.is_student_active(request.user)
+        )
+
+    def is_student_active(self, user):
+        try:
+            # Assuming Student has a OneToOne relationship with User model
+            student = user.student
+            return student.status == 'active'
+        except Student.DoesNotExist:
+            return False

@@ -11,8 +11,8 @@ from rest_framework import status
 from rest_framework import generics
 
 
-from .serializers import ModuleSerializer,CourseSerializer 
-from .models import Course,Module
+from .serializers import ModuleSerializer,CourseSerializer,BatchSerializer
+from .models import Course,Module,Batch
 from account.permissions import SuperadminPermission,FacultyPermission,StudentPermission,AdminPermission
 from rest_framework import serializers
 
@@ -131,11 +131,13 @@ class ModuleCreateView(APIView):
     permission_classes = [AdminPermission]
 
     def post(self, request,*args, **kwargs):
+        courses=0
         course_id=kwargs.get('pk')
         course_obj=Course.objects.get(id=course_id)
         serializer=ModuleSerializer(data=request.data)
+        courses=Module.objects.filter(course=course_obj).count()
         if serializer.is_valid():
-           serializer.save(course=course_obj)
+           serializer.save(course=course_obj,mod_no=courses+1)
            response_data = {
                 "status": 1,
                 "data": serializer.data
@@ -144,3 +146,131 @@ class ModuleCreateView(APIView):
            return Response(response_data, status=status.HTTP_201_CREATED)
 
         return Response({"status":0,"message":serializer.errors})
+    
+class ModuleUpdateView(generics.UpdateAPIView):
+    queryset = Module.objects.all()
+    serializer_class = ModuleSerializer
+    authentication_classes = [BasicAuthentication]
+    permission_classes = [AdminPermission]
+
+    def update(self, request, *args, **kwargs):
+        try:
+            partial = kwargs.pop('partial', False)
+            instance = self.get_object()
+            serializer = self.get_serializer(instance, data=request.data, partial=partial)
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)
+            response_data = {
+                "status": 1,
+                "data": serializer.data
+            }
+            return Response(response_data)
+        except Exception as e:
+            response_data = {
+                "status": 0,
+                "message": str(e)
+            }
+            return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
+        
+class ModuleDeleteView(generics.DestroyAPIView):
+    queryset = Module.objects.all()
+    authentication_classes = [BasicAuthentication]
+    permission_classes = [AdminPermission]
+    lookup_field = 'pk'  # Specify the lookup field for identifying the course to delete
+
+    def destroy(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()
+            self.perform_destroy(instance)
+            return Response({"status": 1, "message": "Module deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+        except Course.DoesNotExist:
+            return Response({"status": 0, "message": "Module not found"}, status=status.HTTP_404_NOT_FOUND)        
+
+class BatchCreateView(APIView):
+    serializer_class = CourseSerializer
+    authentication_classes = [BasicAuthentication]
+    permission_classes = [AdminPermission]
+
+    def post(self, request,*args, **kwargs):
+        course_id=kwargs.get('pk')
+        course_obj=Course.objects.get(id=course_id)
+        serializer=BatchSerializer(data=request.data)
+        if serializer.is_valid():
+           serializer.save(course=course_obj,is_active=True)
+           response_data = {
+                "status": 1,
+                "data": serializer.data
+            }
+
+           return Response(response_data, status=status.HTTP_201_CREATED)
+
+        return Response({"status":0,"message":serializer.errors})
+
+class BatchListView(APIView):
+    serializer_class=BatchSerializer
+    authentication_classes = [BasicAuthentication]
+    permission_classes = [StudentPermission]
+    def get(self, request):
+       try:
+            # Retrieve all courses from the database
+           student = request.user.student
+           batch = Batch.objects.filter(students=student)
+
+            # Serialize the courses using the serializer
+           serializer = self.serializer_class(batch, many=True)
+
+           total_count = batch.count()
+
+            # Return the serialized data in the response
+           response_data={
+                'status':1,
+                "data":serializer.data,
+                "total_results":total_count
+            }
+           return Response(response_data, status=status.HTTP_200_OK)
+       except Exception as e:
+           return Response({
+               'status':0,
+               "message":'batch not Availabe'
+           })
+
+class BatchUpdateView(generics.UpdateAPIView):
+    queryset = Batch.objects.all()
+    serializer_class = BatchSerializer
+    authentication_classes = [BasicAuthentication]
+    permission_classes = [AdminPermission]
+    http_method_names = ['patch']
+    def partial_update(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()
+            serializer = self.get_serializer(instance, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)
+            response_data = {
+                "status": 1,
+                "data": serializer.data
+            }
+            return Response(response_data)
+        except Exception as e:
+            response_data = {
+                "status": 0,
+                "message": str(e)
+            }
+            return Response(response_data, status=status.HTTP_400_BAD_REQUEST)
+
+
+class BatchDeleteView(generics.DestroyAPIView):
+    queryset = Batch.objects.all()
+    authentication_classes = [BasicAuthentication]
+    permission_classes = [SuperadminPermission]
+    lookup_field = 'pk'  # Specify the lookup field for identifying the course to delete
+
+    def destroy(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()
+            self.perform_destroy(instance)
+            return Response({"status": 1, "message": "Course deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+        except Batch.DoesNotExist:
+            return Response({"status": 0, "message": "Course not found"}, status=status.HTTP_404_NOT_FOUND)  
+
+

@@ -42,6 +42,12 @@ class User(AbstractBaseUser):
 class Student(models.Model):
     user = models.OneToOneField(User, on_delete = models.CASCADE)
     parent_no=models.CharField(max_length=13,blank=False,null=False)
+    STATUS_CHOICES = (
+        ('waiting', 'Waiting'),
+        ('active', 'Active'),
+        ('inactive', 'Inactive'),
+    )
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='waiting')
 
     def __str__(self):
        return self.user.full_name
